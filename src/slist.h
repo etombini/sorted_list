@@ -282,17 +282,12 @@
     name->remove_at = &slist_ ## type ## _remove_at;                                                    \
     name->is_in = &slist_ ## type ## _is_in;                                                            \
     name->at = &slist_ ## type ## _at;                                                                  \
-    /* variable and pointers used when freeing memory for *this* slist   */                             \
-    type * slist_ ## type ## _ ## name ## _garbage;                                                     \
-    unsigned int slist_ ## type ## _ ## name ## _size;
-
 
 #define slist_free(type, name)                                                                          \
-    slist_ ## type ## _ ## name ## _size = name->size;                                                  \
-    for(int i = 0; i < slist_ ## type ## _ ## name ## _size; i++)                                       \
+    while(name->size > 0)                                                                               \
     {                                                                                                   \
-        slist_ ## type ## _ ## name ## _garbage = name->remove_at(name, 0);                             \
-        free(slist_ ## type ## _ ## name ## _garbage);                                                  \
+        type * garbage = name->remove_at(name, 0);                                                      \
+        free(garbage);                                                                                  \
     }                                                                                                   \
     free(name);                                                                                         \
 
