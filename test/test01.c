@@ -113,6 +113,12 @@ bool test_insert()
         my_slist_int->insert(my_slist_int, v);          
     }
 
+    if(my_slist_int->size != size)
+    {
+        fprintf(stderr, "[test_insert] slist size is %d, but %d was expected", my_slist_int->size, size);
+        return false;
+    }
+
     for(int i = 0; i < my_slist_int->size - 1 ; i++)
     {
         if(my_slist_int->cmp(my_slist_int->at(my_slist_int, i), my_slist_int->at(my_slist_int, i+1)) > 0)
