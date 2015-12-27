@@ -1,9 +1,9 @@
 #ifndef SLIST_H
 #define SLIST_H
 
-#include <stdio.h>
+#include <stdio.h> // fprintf() 
 #include <string.h>
-#include <stdlib.h>
+#include <stdlib.h> // exit()
 #include <stdbool.h>
 
 #define slist(type)                                                                                     \
@@ -266,14 +266,32 @@
         return v;                                                                                       \
     }                                                                                                   \
 
-#define slist_init(type, sl, _cmp)                                                                      \
-    sl->size = 0;                                                                                       \
-    sl->root = NULL;                                                                                    \
-    sl->cmp = &_cmp;                                                                                    \
-    sl->insert = &slist_ ## type ## _insert;                                                            \
-    sl->remove = &slist_ ## type ## _remove;                                                            \
-    sl->remove_at = &slist_ ## type ## _remove_at;                                                      \
-    sl->is_in = &slist_ ## type ## _is_in;                                                              \
-    sl->at = &slist_ ## type ## _at;                                                                    \
+#define slist_init(type, name, _cmp)                                                                    \
+    struct slist_ ## type * name;                                                                       \
+    name = malloc(sizeof(* name));                                                                      \
+    if(name == NULL)                                                                                    \
+    {                                                                                                   \
+        fprintf(stderr, "Can not allocate memory for struct slist_ ## type * name");                    \
+        exit(EXIT_FAILURE);                                                                             \
+    }                                                                                                   \
+    name->size = 0;                                                                                     \
+    name->root = NULL;                                                                                  \
+    name->cmp = &_cmp;                                                                                  \
+    name->insert = &slist_ ## type ## _insert;                                                          \
+    name->remove = &slist_ ## type ## _remove;                                                          \
+    name->remove_at = &slist_ ## type ## _remove_at;                                                    \
+    name->is_in = &slist_ ## type ## _is_in;                                                            \
+    name->at = &slist_ ## type ## _at;                                                                  \
+
+#define slist_free(type, name)                                                                          \
+    type * slist_ ## type ## _garbage;                                                                  \
+    unsigned int slist_ ## type ## _ ## name ## _size = name->size;                                     \
+    for(int i = 0; i < slist_ ## type ## _ ## name ## _size; i++)                                       \
+    {                                                                                                   \
+        slist_ ## type ## _garbage = name->remove_at(name, 0);                                          \
+        free(slist_ ## type ## _garbage);                                                               \
+    }                                                                                                   \
+    free(name);                                                                                         \
+
 
 #endif
