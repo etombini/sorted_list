@@ -26,6 +26,7 @@
         type * (*remove_at)(struct slist_ ## type *, unsigned int);                                     \
         struct slist_ ## type ## _pos (*is_in)(struct slist_ ## type *, type *);                        \
         type * (*at)(struct slist_ ## type *, unsigned int index);                                      \
+        int (*cmp_slist)(struct slist_ ## type *, struct slist_ ## type *);                             \
     };                                                                                                  \
                                                                                                         \
     struct slist_ ## type ## _pos {                                                                     \
@@ -268,6 +269,41 @@
         v = current->value;                                                                             \
         return v;                                                                                       \
     }                                                                                                   \
+                                                                                                        \
+    int slist_ ## type ## _cmp_slist(struct slist_ ## type * sl1, struct slist_ ## type * sl2)          \
+    {                                                                                                   \
+        struct slist_ ## type ## _node * current_node_sl1;                                              \
+        struct slist_ ## type ## _node * current_node_sl2;                                              \
+        int cmp = 0;                                                                                    \
+        unsigned int size;                                                                              \
+                                                                                                        \
+        if(sl1->size > sl2->size)                                                                       \
+            size = sl2->size;                                                                           \
+        else                                                                                            \
+            size = sl1->size;                                                                           \
+                                                                                                        \
+        current_node_sl1 = sl1->root;                                                                   \
+        current_node_sl2 = sl2->root;                                                                   \
+                                                                                                        \
+        for(int i = 0; i < size; i++)                                                                   \
+        {                                                                                               \
+            cmp = sl1->cmp(current_node_sl1->value, current_node_sl2->value);                           \
+            if(cmp != 0)                                                                                \
+                return cmp;                                                                             \
+            current_node_sl1 = current_node_sl1->next;                                                  \
+            current_node_sl2 = current_node_sl2->next;                                                  \
+        }                                                                                               \
+                                                                                                        \
+        if(sl1->size > sl2->size)                                                                       \
+            return 1;                                                                                   \
+        if(sl1->size < sl2->size)                                                                       \
+            return -1;                                                                                  \
+        else                                                                                            \
+            return 0;                                                                                   \
+    }                                                                                                   \
+
+
+
 
 #define slist_init(type, name, _cmp)                                                                    \
     struct slist_ ## type * name;                                                                       \
@@ -285,6 +321,7 @@
     name->remove_at = &slist_ ## type ## _remove_at;                                                    \
     name->is_in = &slist_ ## type ## _is_in;                                                            \
     name->at = &slist_ ## type ## _at;                                                                  \
+    name->cmp_slist = &slist_ ## type ## _cmp_slist;                                                    \
 
 #define slist_free(type, name)                                                                          \
     while(name->size > 0)                                                                               \
