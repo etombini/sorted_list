@@ -26,6 +26,8 @@
         type * (*remove_at)(struct slist_ ## type *, unsigned int);                                     \
         struct slist_ ## type ## _pos (*is_in)(struct slist_ ## type *, type *);                        \
         type * (*at)(struct slist_ ## type *, unsigned int index);                                      \
+        struct slist_ ##  type ## _node ** (*as_node_array)(struct slist_ ## type *);                   \
+        type ** (*as_array)(struct slist_ ## type *);                                                   \
         int (*cmp_slist)(struct slist_ ## type *, struct slist_ ## type *);                             \
     };                                                                                                  \
                                                                                                         \
@@ -166,35 +168,33 @@
     type * slist_ ## type ## _remove_at(struct slist_ ## type * l, unsigned int index)                  \
     {                                                                                                   \
         struct slist_ ## type ## _node * current;                                                       \
-        struct slist_ ## type ## _node * nodes[l->size];                                                \
+        struct slist_ ## type ## _node ** nodes;                                                        \
         type * v = NULL;                                                                                \
                                                                                                         \
-        if(index > l->size - 1)                                                                         \
+        if(index + 1 > l->size) /* handle the case when l is empty (size = 0) and nodes is NULL */      \
             return v;                                                                                   \
                                                                                                         \
         if(index == 0)                                                                                  \
         {                                                                                               \
             current = l->root;                                                                          \
-            l->root = current->next;                                                                    \
+            l->root = l->root->next;                                                                    \
             v = current->value;                                                                         \
             free(current);                                                                              \
             l->size--;                                                                                  \
             return v;                                                                                   \
         }                                                                                               \
                                                                                                         \
-        current = l->root;                                                                              \
-                                                                                                        \
-        for(int i = 0; i<l->size; i++)                                                                  \
+        nodes = l->as_node_array(l);                                                                    \
+        if(nodes == NULL)                                                                               \
         {                                                                                               \
-            nodes[i] = current;                                                                         \
-            current = current->next;                                                                    \
+            fprintf(stderr, "DEBUG - remove_at[%d]: nodes is not supposed to be NULL\n", index);        \
         }                                                                                               \
-                                                                                                        \
         current = nodes[index];                                                                         \
         nodes[index - 1]->next = nodes[index]->next;                                                    \
         v = current->value;                                                                             \
         free(current);                                                                                  \
         l->size--;                                                                                      \
+        free(nodes);                                                                                    \
         return v;                                                                                       \
     }                                                                                                   \
                                                                                                         \
@@ -270,6 +270,54 @@
         return v;                                                                                       \
     }                                                                                                   \
                                                                                                         \
+    struct slist_ ##  type ## _node ** slist_ ## type ## _as_node_array(struct slist_ ## type * l)      \
+    {                                                                                                   \
+        struct slist_ ## type ## _node * current;                                                       \
+        struct slist_ ## type ## _node ** nodes;                                                        \
+                                                                                                        \
+        if(l->size == 0)                                                                                \
+            return NULL;                                                                                \
+                                                                                                        \
+        nodes = calloc(l->size, sizeof(*nodes));                                                        \
+        if(nodes == NULL)                                                                               \
+        {                                                                                               \
+            fprintf(stderr, "Can not allocate memory for slist nodes array");                           \
+            exit(EXIT_FAILURE);                                                                         \
+        }                                                                                               \
+                                                                                                        \
+        current = l->root;                                                                              \
+        for(int i = 0; i < l->size; i++)                                                                \
+        {                                                                                               \
+            *(nodes + i) = current;                                                                     \
+            current = current->next;                                                                    \
+        }                                                                                               \
+        return nodes;                                                                                   \
+    }                                                                                                   \
+                                                                                                        \
+    type ** slist_ ## type ## _as_array(struct slist_ ## type * l)                                      \
+    {                                                                                                   \
+        struct slist_ ## type ## _node * current;                                                       \
+        type ** values;                                                                                 \
+                                                                                                        \
+        if(l->size == 0)                                                                                \
+            return NULL;                                                                                \
+                                                                                                        \
+        values = calloc(l->size, sizeof(*values));                                                      \
+        if(values == NULL)                                                                              \
+        {                                                                                               \
+            fprintf(stderr, "Can not allocate memory for slist values array");                          \
+            exit(EXIT_FAILURE);                                                                         \
+        }                                                                                               \
+                                                                                                        \
+        current = l->root;                                                                              \
+        for(int i = 0; i < l->size; i++)                                                                \
+        {                                                                                               \
+            *(values + i) = current->value;                                                             \
+            current = current->next;                                                                    \
+        }                                                                                               \
+        return values;                                                                                  \
+    }                                                                                                   \
+                                                                                                        \
     int slist_ ## type ## _cmp_slist(struct slist_ ## type * sl1, struct slist_ ## type * sl2)          \
     {                                                                                                   \
         struct slist_ ## type ## _node * current_node_sl1;                                              \
@@ -321,7 +369,10 @@
     name->remove_at = &slist_ ## type ## _remove_at;                                                    \
     name->is_in = &slist_ ## type ## _is_in;                                                            \
     name->at = &slist_ ## type ## _at;                                                                  \
+    name->as_array = &slist_ ## type ## _as_array;                                                      \
+    name->as_node_array = &slist_ ## type ## _as_node_array;                                            \
     name->cmp_slist = &slist_ ## type ## _cmp_slist;                                                    \
+    
 
 #define slist_free(type, name)                                                                          \
     while(name->size > 0)                                                                               \

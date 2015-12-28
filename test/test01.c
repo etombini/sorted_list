@@ -17,6 +17,7 @@ int int_cmp(int * a, int *b)
 
 bool test_at()
 {
+    //printf("DEBUG - test_at: start\n");
     slist_init(int, my_slist_int, int_cmp);    
     bool res = true;
 
@@ -41,9 +42,13 @@ bool test_at()
     * list_int[7] = 1;
     * list_int[8] = 0;
     * list_int[9] = 6;
-    
+   
+    //printf("DEBUG - test_at: list_int set up done\n");
+
     for(int i = 0; i<10; i++)
         my_slist_int->insert(my_slist_int, list_int[i]);
+
+    //printf("DEBUG - test_at: slist provisioning done\n");
 
     for(int i = 0; i < 10; i++)
     {
@@ -53,6 +58,8 @@ bool test_at()
             res = false;
         }
     }
+
+    //printf("DEBUG - test_at: testing clean order done\n");
 
     // Cleaning the mess
     // list_int[i] are freed in the for loop
