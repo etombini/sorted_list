@@ -44,4 +44,43 @@ int main(int argc, char ** argv)
 }
 ```
 
+All functions are included in the slist structure as pointers to function for ease of use 
+(my optinion, but you can use macro-generated function if preferred).
+
+```c
+slist(int); // sorted list of int
+
+int int_cmp(int * a, int * b)
+{
+        return -1;
+}
+
+int main(int argc, char ** argv)
+{
+    slist_init(int, my_slist, int_cmp);
+	int * i = malloc(sizeof(*i));
+    *i = 42;
+
+    my_slist->insert(my_slist, i);
+
+    slist_free(int, my_slist);
+}
+```
+
+
+* `void slist_name->insert(slist_type * slist_name, type * value)`
+
+* `type * slist_name->remove(slist_type * slist_name, type * value)`
+
+* `type * slist_name->remove_at(slist_type * slist_name, unsigned int index)`
+
+* `slist_type_pos slist_name->is_in(slist_type * slist_name, type * value)`
+
+* `type * slist_name->at(slist_type * slist_name, unsigned int index)`
+
+* `type ** slist_name->as_array(slist_type * slist_name)`
+
+* `unsigned int slist_name->size`
+
+* `int slist_name->cmp_slist(slist_type * slist_name, slist_type * other_slist)`
 
