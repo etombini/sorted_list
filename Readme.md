@@ -7,7 +7,7 @@ struct something {
 };
 typedef struct something new_type;
 
-slist(my_struct); // declares a struct slist_new_type
+slist(new_type); // declares a struct slist_new_type
 ```
 
 * `slist_init(type, name, cmp)` instanciates a pointer to a sorted list named `name`. 
