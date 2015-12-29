@@ -12,12 +12,13 @@ slist(my_struct);
 
 * `slist_init(type, name, cmp)` instanciates a pointer to a sorted list named `name`. 
 Memory allocation is done within this macro. `cmp` is a comparison function 
-the user must provide. `cmp` prototype must be `int cmp(type *, type *)` where
+the user must provide. `cmp` prototype must be `int cmp(type * a1, type * a1)` where
 `type` is the type used in `slist(type)`.
-```
+ `cmp` returns an integer greater than, equal to, or less than 0, according as `a1` is greater than, equal to, or less than `a2`.
+```c
 slist(int); // sorted list of int
 
-int int_cmp(int * a, int *b)
+int int_cmp(int * a, int * b)
 {
     if(*a == *b)
         return 0;
