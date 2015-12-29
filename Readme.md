@@ -14,7 +14,13 @@ slist(my_struct);
 Memory allocation is done within this macro. `cmp` is a comparison function 
 the user must provide. `cmp` prototype must be `int cmp(type * a1, type * a1)` where
 `type` is the type used in `slist(type)`.
- `cmp` returns an integer greater than, equal to, or less than 0, according as `a1` is greater than, equal to, or less than `a2`.
+ `cmp` must return an integer greater than, equal to, or less than 0, according as 
+ `a1` is greater than, equal to, or less than `a2`.
+
+* `slist_free(type, name)` free all memory used by the sorted list, including each item. 
+Note that a simple call to `free()` is done on each item. If your item data structure is
+complex and requires nested calls to `free()` you must empty the sorted list before freeing 
+it using iterative calls to the `remove_at()` method.
 ```c
 slist(int); // sorted list of int
 
@@ -33,6 +39,9 @@ int main(int argc, char ** argv)
     slist_init(int, my_slist, int_cmp);
 	
 	/* my_slist is available */
-}
 
+    slist_free(int, my_slist);
+}
 ```
+
+
