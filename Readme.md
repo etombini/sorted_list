@@ -2,12 +2,12 @@
 * `slist(type)` declares all data structure to handle a sorted list composed of items. 
 The type of item is user defined but must be a single word.
 ```c
-struct my_struct {
+struct something {
 	/* some declaration */
 };
-typedef struct my_struct my_struct;
+typedef struct something new_type;
 
-slist(my_struct);
+slist(my_struct); // declares a struct slist_new_type
 ```
 
 * `slist_init(type, name, cmp)` instanciates a pointer to a sorted list named `name`. 
