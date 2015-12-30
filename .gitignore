@@ -2,3 +2,4 @@ test/*.dSYM*
 test/test_at
 test/test_insert
 test/test_remove_at
+test/test_is_in
