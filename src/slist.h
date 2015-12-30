@@ -39,10 +39,9 @@
                                                                                                         \
     void slist_ ## type ## _insert(struct slist_ ## type * l, type * value)                             \
     {                                                                                                   \
-        struct slist_ ## type ## _node * current;                                                       \
+        struct slist_ ## type ## _node ** nodes;                                                        \
         struct slist_ ## type ## _node * new_node;                                                      \
                                                                                                         \
-        struct slist_ ## type ## _node * nodes[l->size];                                                \
         int i_inf, i_sup, i_mid;                                                                        \
                                                                                                         \
         new_node = malloc(sizeof(*new_node));                                                           \
@@ -62,21 +61,16 @@
             return;                                                                                     \
         }                                                                                               \
                                                                                                         \
-        current = l->root;                                                                              \
                                                                                                         \
-        if(l->cmp(current->value, new_node->value) > 0)                                                 \
+        if(l->cmp(l->root->value, new_node->value) > 0)                                                 \
         {                                                                                               \
-            new_node->next = current;                                                                   \
+            new_node->next = l->root;                                                                   \
             l->root = new_node;                                                                         \
             l->size++;                                                                                  \
             return;                                                                                     \
         }                                                                                               \
                                                                                                         \
-        for(int i = 0; i<l->size; i++)                                                                  \
-        {                                                                                               \
-            nodes[i] = current;                                                                         \
-            current = current->next;                                                                    \
-        }                                                                                               \
+        nodes = l->as_node_array(l);                                                                    \
                                                                                                         \
         i_inf = 0;                                                                                      \
         i_sup = l->size - 1;                                                                            \
@@ -85,6 +79,7 @@
         {                                                                                               \
             nodes[i_sup]->next = new_node;                                                              \
             l->size++;                                                                                  \
+            free(nodes);                                                                                \
             return;                                                                                     \
         }                                                                                               \
                                                                                                         \
@@ -100,13 +95,14 @@
         nodes[i_inf]->next = new_node;                                                                  \
         new_node->next = nodes[i_sup];                                                                  \
         l->size++;                                                                                      \
+        free(nodes);                                                                                    \
         return;                                                                                         \
     }                                                                                                   \
                                                                                                         \
     type * slist_ ## type ## _remove(struct slist_ ## type * l, type * value)                           \
     {                                                                                                   \
         struct slist_ ## type ## _node * current;                                                       \
-        struct slist_ ## type ## _node * nodes[l->size];                                                \
+        struct slist_ ## type ## _node ** nodes;                                                        \
         int i_inf, i_sup, i_mid;                                                                        \
                                                                                                         \
         type * v;                                                                                       \
@@ -129,17 +125,13 @@
             return v;                                                                                   \
         }                                                                                               \
                                                                                                         \
-        for(int i = 0; i<l->size; i++)                                                                  \
-        {                                                                                               \
-            nodes[i] = current;                                                                         \
-            current = current->next;                                                                    \
-        }                                                                                               \
-                                                                                                        \
+        nodes = l->as_node_array(l);                                                                    \
         i_inf = 0;                                                                                      \
         i_sup = l->size - 1;                                                                            \
                                                                                                         \
         if(l->cmp(value, nodes[i_sup]->value) > 0)                                                      \
         {                                                                                               \
+            free(nodes);                                                                                \
             return v;                                                                                   \
         }                                                                                               \
                                                                                                         \
@@ -155,14 +147,17 @@
         if(l->cmp(value, nodes[i_sup]->value) == 0)                                                     \
         {                                                                                               \
             v = nodes[i_sup]->value;                                                                    \
-            current = nodes[i_sup];                                                                     \
             nodes[i_inf]->next = nodes[i_sup]->next;                                                    \
-            free(current);                                                                              \
+            free(nodes[i_sup]);                                                                         \
             l->size--;                                                                                  \
+            free(nodes);                                                                                \
             return v;                                                                                   \
         }                                                                                               \
         else                                                                                            \
+        {                                                                                               \
+            free(nodes);                                                                                \
             return v;                                                                                   \
+        }                                                                                               \
     }                                                                                                   \
                                                                                                         \
     type * slist_ ## type ## _remove_at(struct slist_ ## type * l, unsigned int index)                  \
@@ -188,11 +183,11 @@
         if(nodes == NULL)                                                                               \
         {                                                                                               \
             fprintf(stderr, "DEBUG - remove_at[%d]: nodes is not supposed to be NULL\n", index);        \
+            exit(EXIT_FAILURE);                                                                         \
         }                                                                                               \
-        current = nodes[index];                                                                         \
         nodes[index - 1]->next = nodes[index]->next;                                                    \
-        v = current->value;                                                                             \
-        free(current);                                                                                  \
+        v = nodes[index]->value;                                                                        \
+        free(nodes[index]);                                                                             \
         l->size--;                                                                                      \
         free(nodes);                                                                                    \
         return v;                                                                                       \
@@ -200,9 +195,8 @@
                                                                                                         \
     struct slist_ ## type ## _pos  slist_ ## type ## _is_in(struct slist_ ## type * l, type * value)    \
     {                                                                                                   \
-        struct slist_ ## type ## _node * current;                                                       \
+        struct slist_ ## type ## _node ** nodes;                                                        \
         struct slist_ ## type ## _pos pos;                                                              \
-        struct slist_ ## type ## _node * nodes[l->size];                                                \
         unsigned int i_inf, i_sup, i_mid;                                                               \
                                                                                                         \
         pos.is_in = false;                                                                              \
@@ -215,19 +209,14 @@
         if(l->cmp(l->root->value, value) > 0)                                                           \
             return pos;                                                                                 \
                                                                                                         \
-        current = l->root;                                                                              \
-                                                                                                        \
-        for(int i = 0; i<l->size; i++)                                                                  \
-        {                                                                                               \
-            nodes[i] = current;                                                                         \
-            current = current->next;                                                                    \
-        }                                                                                               \
+        nodes = l->as_node_array(l);                                                                    \
                                                                                                         \
         i_inf = 0;                                                                                      \
         i_sup = l->size - 1;                                                                            \
                                                                                                         \
         if(l->cmp(value, nodes[i_sup]->value) > 0)                                                      \
         {                                                                                               \
+            free(nodes);                                                                                \
             return pos;                                                                                 \
         }                                                                                               \
                                                                                                         \
@@ -245,10 +234,9 @@
             pos.is_in = true;                                                                           \
             pos.pos = i_sup;                                                                            \
             pos.value = nodes[i_sup]->value;                                                            \
-            return pos;                                                                                 \
         }                                                                                               \
-        else                                                                                            \
-            return pos;                                                                                 \
+        free(nodes);                                                                                    \
+        return pos;                                                                                     \
     }                                                                                                   \
                                                                                                         \
     type * slist_ ## type ## _at(struct slist_ ## type * l, unsigned int index)                         \
