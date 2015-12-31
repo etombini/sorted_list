@@ -69,18 +69,24 @@ int main(int argc, char ** argv)
 
 
 * `void slist_name->insert(slist_type * slist_name, type * value)`
+Thread safe
 
 * `type * slist_name->remove(slist_type * slist_name, type * value)`
+Thread safe
 
 * `type * slist_name->remove_at(slist_type * slist_name, unsigned int index)`
+Thread safe
 
 * `slist_type_pos slist_name->is_in(slist_type * slist_name, type * value)`
+Thread safe
 
 * `type * slist_name->at(slist_type * slist_name, unsigned int index)`
+Thread safe
 
 * `type ** slist_name->as_array(slist_type * slist_name)`
+Thread safe
 
 * `unsigned int slist_name->size`
 
 * `int slist_name->cmp_slist(slist_type * slist_name, slist_type * other_slist)`
-
+Not thread safe
