@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h> // exit()
 #include <stdbool.h>
+#include<pthread.h> // mutex
 
 #define slist(type)                                                                                     \
     struct slist_ ## type;                                                                              \
@@ -19,6 +20,7 @@
     struct slist_ ## type {                                                                             \
         struct slist_ ##  type ## _node * root;                                                         \
         unsigned int size;                                                                              \
+        pthread_mutex_t slist_lock;                                                                     \
                                                                                                         \
         int (*cmp)(type *, type *);                                                                     \
         void (*insert)(struct slist_ ## type *, type *);                                                \
@@ -29,6 +31,8 @@
         struct slist_ ##  type ## _node ** (*as_node_array)(struct slist_ ## type *);                   \
         type ** (*as_array)(struct slist_ ## type *);                                                   \
         int (*cmp_slist)(struct slist_ ## type *, struct slist_ ## type *);                             \
+        int (*lock)(struct slist_ ## type *);                                                           \
+        int (*unlock)(struct slist_ ## type *);                                                         \
     };                                                                                                  \
                                                                                                         \
     struct slist_ ## type ## _pos {                                                                     \
@@ -39,6 +43,7 @@
                                                                                                         \
     void slist_ ## type ## _insert(struct slist_ ## type * l, type * value)                             \
     {                                                                                                   \
+        l->lock(l);                                                                                     \
         struct slist_ ## type ## _node ** nodes;                                                        \
         struct slist_ ## type ## _node * new_node;                                                      \
                                                                                                         \
@@ -58,15 +63,16 @@
         {                                                                                               \
             l->root = new_node;                                                                         \
             l->size++;                                                                                  \
+            l->unlock(l);                                                                               \
             return;                                                                                     \
         }                                                                                               \
-                                                                                                        \
                                                                                                         \
         if(l->cmp(l->root->value, new_node->value) > 0)                                                 \
         {                                                                                               \
             new_node->next = l->root;                                                                   \
             l->root = new_node;                                                                         \
             l->size++;                                                                                  \
+            l->unlock(l);                                                                               \
             return;                                                                                     \
         }                                                                                               \
                                                                                                         \
@@ -80,6 +86,7 @@
             nodes[i_sup]->next = new_node;                                                              \
             l->size++;                                                                                  \
             free(nodes);                                                                                \
+            l->unlock(l);                                                                               \
             return;                                                                                     \
         }                                                                                               \
                                                                                                         \
@@ -96,11 +103,13 @@
         new_node->next = nodes[i_sup];                                                                  \
         l->size++;                                                                                      \
         free(nodes);                                                                                    \
+        l->unlock(l);                                                                                   \
         return;                                                                                         \
     }                                                                                                   \
                                                                                                         \
     type * slist_ ## type ## _remove(struct slist_ ## type * l, type * value)                           \
     {                                                                                                   \
+        l->lock(l);                                                                                     \
         struct slist_ ## type ## _node * current;                                                       \
         struct slist_ ## type ## _node ** nodes;                                                        \
         int i_inf, i_sup, i_mid;                                                                        \
@@ -109,12 +118,18 @@
         v = NULL;                                                                                       \
                                                                                                         \
         if(l->root == NULL)                                                                             \
+        {                                                                                               \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
+        }                                                                                               \
                                                                                                         \
         current = l->root;                                                                              \
                                                                                                         \
         if(l->cmp(current->value, value) > 0)                                                           \
+        {                                                                                               \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
+        }                                                                                               \
                                                                                                         \
         if(l->cmp(current->value, value) == 0)                                                          \
         {                                                                                               \
@@ -122,6 +137,7 @@
             v = current->value;                                                                         \
             free(current);                                                                              \
             l->size--;                                                                                  \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
         }                                                                                               \
                                                                                                         \
@@ -132,6 +148,7 @@
         if(l->cmp(value, nodes[i_sup]->value) > 0)                                                      \
         {                                                                                               \
             free(nodes);                                                                                \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
         }                                                                                               \
                                                                                                         \
@@ -151,23 +168,29 @@
             free(nodes[i_sup]);                                                                         \
             l->size--;                                                                                  \
             free(nodes);                                                                                \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
         }                                                                                               \
         else                                                                                            \
         {                                                                                               \
             free(nodes);                                                                                \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
         }                                                                                               \
     }                                                                                                   \
                                                                                                         \
     type * slist_ ## type ## _remove_at(struct slist_ ## type * l, unsigned int index)                  \
     {                                                                                                   \
+        l->lock(l);                                                                                     \
         struct slist_ ## type ## _node * current;                                                       \
         struct slist_ ## type ## _node ** nodes;                                                        \
         type * v = NULL;                                                                                \
                                                                                                         \
         if(index + 1 > l->size) /* handle the case when l is empty (size = 0) and nodes is NULL */      \
+        {                                                                                               \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
+        }                                                                                               \
                                                                                                         \
         if(index == 0)                                                                                  \
         {                                                                                               \
@@ -176,6 +199,7 @@
             v = current->value;                                                                         \
             free(current);                                                                              \
             l->size--;                                                                                  \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
         }                                                                                               \
                                                                                                         \
@@ -190,11 +214,13 @@
         free(nodes[index]);                                                                             \
         l->size--;                                                                                      \
         free(nodes);                                                                                    \
+        l->unlock(l);                                                                                   \
         return v;                                                                                       \
     }                                                                                                   \
                                                                                                         \
     struct slist_ ## type ## _pos  slist_ ## type ## _is_in(struct slist_ ## type * l, type * value)    \
     {                                                                                                   \
+        l->lock(l);                                                                                     \
         struct slist_ ## type ## _node ** nodes;                                                        \
         struct slist_ ## type ## _pos pos;                                                              \
         unsigned int i_inf, i_sup, i_mid;                                                               \
@@ -204,10 +230,16 @@
         pos.value = NULL;                                                                               \
                                                                                                         \
         if(l->root == NULL)                                                                             \
+        {                                                                                               \
+            l->unlock(l);                                                                               \
             return pos;                                                                                 \
+        }                                                                                               \
                                                                                                         \
         if(l->cmp(l->root->value, value) > 0)                                                           \
+        {                                                                                               \
+            l->unlock(l);                                                                               \
             return pos;                                                                                 \
+        }                                                                                               \
                                                                                                         \
         nodes = l->as_node_array(l);                                                                    \
                                                                                                         \
@@ -217,6 +249,7 @@
         if(l->cmp(value, nodes[i_sup]->value) > 0)                                                      \
         {                                                                                               \
             free(nodes);                                                                                \
+            l->unlock(l);                                                                               \
             return pos;                                                                                 \
         }                                                                                               \
                                                                                                         \
@@ -236,25 +269,29 @@
             pos.value = nodes[i_sup]->value;                                                            \
         }                                                                                               \
         free(nodes);                                                                                    \
+        l->unlock(l);                                                                                   \
         return pos;                                                                                     \
     }                                                                                                   \
                                                                                                         \
     type * slist_ ## type ## _at(struct slist_ ## type * l, unsigned int index)                         \
     {                                                                                                   \
+        l->lock(l);                                                                                     \
         struct slist_ ## type ## _node * current;                                                       \
         type * v;                                                                                       \
         v = NULL;                                                                                       \
                                                                                                         \
-        if(index > l->size - 1)                                                                         \
+        if(index > l->size - 1 || l->root == NULL)                                                      \
+        {                                                                                               \
+            l->unlock(l);                                                                               \
             return v;                                                                                   \
-        if(l->root == NULL)                                                                             \
-            return v;                                                                                   \
+        }                                                                                               \
                                                                                                         \
         current = l->root;                                                                              \
         for(int i = 0; i < index; i++)                                                                  \
             current = current->next;                                                                    \
                                                                                                         \
         v = current->value;                                                                             \
+        l->unlock(l);                                                                                   \
         return v;                                                                                       \
     }                                                                                                   \
                                                                                                         \
@@ -284,11 +321,15 @@
                                                                                                         \
     type ** slist_ ## type ## _as_array(struct slist_ ## type * l)                                      \
     {                                                                                                   \
+        l->lock(l);                                                                                     \
         struct slist_ ## type ## _node * current;                                                       \
         type ** values;                                                                                 \
                                                                                                         \
         if(l->size == 0)                                                                                \
+        {                                                                                               \
+            l->unlock(l);                                                                               \
             return NULL;                                                                                \
+        }                                                                                               \
                                                                                                         \
         values = calloc(l->size, sizeof(*values));                                                      \
         if(values == NULL)                                                                              \
@@ -303,6 +344,7 @@
             *(values + i) = current->value;                                                             \
             current = current->next;                                                                    \
         }                                                                                               \
+        l->unlock(l);                                                                                   \
         return values;                                                                                  \
     }                                                                                                   \
                                                                                                         \
@@ -337,8 +379,16 @@
         else                                                                                            \
             return 0;                                                                                   \
     }                                                                                                   \
-
-
+                                                                                                        \
+    int slist_ ## type ## _lock(struct slist_ ## type * l)                                              \
+    {                                                                                                   \
+        return pthread_mutex_lock(&l->slist_lock);                                                      \
+    }                                                                                                   \
+                                                                                                        \
+    int slist_ ## type ## _unlock(struct slist_ ## type * l)                                            \
+    {                                                                                                   \
+        return pthread_mutex_unlock(&l->slist_lock);                                                    \
+    }                                                                                                   \
 
 
 #define slist_init(type, name, _cmp)                                                                    \
@@ -346,7 +396,12 @@
     name = malloc(sizeof(* name));                                                                      \
     if(name == NULL)                                                                                    \
     {                                                                                                   \
-        fprintf(stderr, "Can not allocate memory for struct slist_ ## type * name");                    \
+        fprintf(stderr, "Can not allocate memory for sorted_list");                                     \
+        exit(EXIT_FAILURE);                                                                             \
+    }                                                                                                   \
+    if (pthread_mutex_init(&name->slist_lock, NULL) != 0)                                               \
+    {                                                                                                   \
+        fprintf(stderr, "Can not initialize mutex for sorted_list");                                    \
         exit(EXIT_FAILURE);                                                                             \
     }                                                                                                   \
     name->size = 0;                                                                                     \
@@ -360,6 +415,8 @@
     name->as_array = &slist_ ## type ## _as_array;                                                      \
     name->as_node_array = &slist_ ## type ## _as_node_array;                                            \
     name->cmp_slist = &slist_ ## type ## _cmp_slist;                                                    \
+    name->lock = &slist_ ## type ## _lock;                                                              \
+    name->unlock = &slist_ ## type ## _unlock;                                                          \
     
 
 #define slist_free(type, name)                                                                          \
@@ -368,6 +425,7 @@
         type * garbage = name->remove_at(name, 0);                                                      \
         free(garbage);                                                                                  \
     }                                                                                                   \
+    pthread_mutex_destroy(&name->slist_lock);                                                           \
     free(name);                                                                                         \
 
 
