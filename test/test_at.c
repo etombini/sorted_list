@@ -2,7 +2,7 @@
 
 #include <stdlib.h> //arc4random
 
-slist(int); // provide struct slist_int;
+slist(int) // provide struct slist_int;
 
 // comparison function
 int int_cmp(int * a, int *b)
@@ -74,7 +74,7 @@ bool test_at_02()
     int * new_middle_value;
     int * v; //tmp pointer
 
-    for(int i = 0; i < size; i++)
+    for(unsigned int i = 0; i < size; i++)
     {
         v = malloc(sizeof(*v));
         //*v = arc4random();
@@ -85,7 +85,7 @@ bool test_at_02()
     // Adding "offset" values that must be lower than middle_value
     // New position for middle value is to be middle+offset
     middle_value = sl->at(sl, middle);
-    for(int i = 0; i < offset; i++)
+    for(unsigned int i = 0; i < offset; i++)
     {
         v = malloc(sizeof(*v));
         *v = i;
@@ -104,7 +104,7 @@ bool test_at_02()
     return res;
 }
 
-int main(int argc, char ** argv)
+int main()
 {
     if(test_at_01())
         printf("[OK] test_at_01 succeed\n");

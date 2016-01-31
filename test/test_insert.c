@@ -2,7 +2,7 @@
 
 #include <stdlib.h> //arc4random
 
-slist(int); // provide struct slist_int;
+slist(int) // provide struct slist_int;
 
 // comparison function
 int int_cmp(int * a, int *b)
@@ -21,7 +21,7 @@ bool test_insert_01()
     bool res = true;
     unsigned int size = arc4random_uniform(10000);
 
-    for(int i = 0; i < size; i++)
+    for(unsigned int i = 0; i < size; i++)
     {
         int * v = malloc(sizeof(*v));
         *v = arc4random();
@@ -45,14 +45,14 @@ bool test_insert_02()
     slist_init(int, my_slist_int, int_cmp);    
     bool res = true;
     unsigned int size = arc4random_uniform(10000);
-    for(int i = 0; i < size; i++)
+    for(unsigned int i = 0; i < size; i++)
     {
         int * v = malloc(sizeof(*v));
         *v = arc4random();
         my_slist_int->insert(my_slist_int, v);          
     }
 
-    for(int i = 0; i < my_slist_int->size - 1 ; i++)
+    for(unsigned int i = 0; i < my_slist_int->size - 1 ; i++)
     {
         if(my_slist_int->cmp(my_slist_int->at(my_slist_int, i), my_slist_int->at(my_slist_int, i+1)) > 0)
         {
@@ -69,7 +69,7 @@ bool test_insert_02()
 
 }
 
-int main(int argc, char ** argv)
+int main()
 {
     if(test_insert_01())
         printf("[OK] test_insert_01 succeed\n");

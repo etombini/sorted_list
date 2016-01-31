@@ -2,7 +2,7 @@
 
 #include <stdlib.h> //arc4random
 
-slist(int); // provide struct slist_int;
+slist(int) // provide struct slist_int;
 
 // comparison function
 int int_cmp(int * a, int *b)
@@ -23,7 +23,7 @@ bool test_is_in_01()
     unsigned int size = arc4random_uniform(10000);
     int canary = arc4random_uniform(size);
 
-    for(int i = 0; i < size; i++)
+    for(unsigned int i = 0; i < size; i++)
     {
         int * v = malloc(sizeof(*v));
         *v = i;
@@ -38,7 +38,7 @@ bool test_is_in_01()
         res = false;
     }
 
-    if(pos.pos != canary)
+    if(pos.pos != (unsigned int)canary)
     {
         fprintf(stderr, "DEBUG - test_is_in - Canary %d found at position %d\n", canary, pos.pos);
         res =  false;
@@ -64,7 +64,7 @@ bool test_is_in_02()
     unsigned int size = arc4random_uniform(10000);
     int canary = size;
 
-    for(int i = 0; i < size; i++)
+    for(unsigned int i = 0; i < size; i++)
     {
         int * v = malloc(sizeof(*v));
         *v = i;
@@ -85,7 +85,7 @@ bool test_is_in_02()
     return res;
 }
 
-int main(int argc, char ** argv)
+int main()
 {
     if(test_is_in_01())
         printf("[OK] test_is_in_01 succeed\n");

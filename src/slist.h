@@ -287,7 +287,7 @@
         }                                                                                               \
                                                                                                         \
         current = l->root;                                                                              \
-        for(int i = 0; i < index; i++)                                                                  \
+        for(unsigned int i = 0; i < index; i++)                                                         \
             current = current->next;                                                                    \
                                                                                                         \
         v = current->value;                                                                             \
@@ -311,7 +311,7 @@
         }                                                                                               \
                                                                                                         \
         current = l->root;                                                                              \
-        for(int i = 0; i < l->size; i++)                                                                \
+        for(unsigned int i = 0; i < l->size; i++)                                                       \
         {                                                                                               \
             *(nodes + i) = current;                                                                     \
             current = current->next;                                                                    \
@@ -339,7 +339,7 @@
         }                                                                                               \
                                                                                                         \
         current = l->root;                                                                              \
-        for(int i = 0; i < l->size; i++)                                                                \
+        for(unsigned int i = 0; i < l->size; i++)                                                       \
         {                                                                                               \
             *(values + i) = current->value;                                                             \
             current = current->next;                                                                    \
@@ -363,7 +363,7 @@
         current_node_sl1 = sl1->root;                                                                   \
         current_node_sl2 = sl2->root;                                                                   \
                                                                                                         \
-        for(int i = 0; i < size; i++)                                                                   \
+        for(unsigned int i = 0; i < size; i++)                                                          \
         {                                                                                               \
             cmp = sl1->cmp(current_node_sl1->value, current_node_sl2->value);                           \
             if(cmp != 0)                                                                                \

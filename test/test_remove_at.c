@@ -2,7 +2,7 @@
 
 #include <stdlib.h> //arc4random
 
-slist(int); // provide struct slist_int;
+slist(int) // provide struct slist_int;
 
 // comparison function
 int int_cmp(int * a, int *b)
@@ -25,7 +25,7 @@ bool test_remove_at_01()
 
     unsigned int size = arc4random_uniform(1000);
 
-    for(int i = 0; i < size; i++)
+    for(unsigned int i = 0; i < size; i++)
     {
         int * v = malloc(sizeof(*v));
         *v = arc4random();
@@ -53,7 +53,7 @@ bool test_remove_at_01()
     return res;
 }
 
-int main(int argc, char ** argv)
+int main()
 {
     if(test_remove_at_01())
         printf("[OK] test_remove_at_01 succeed\n");
